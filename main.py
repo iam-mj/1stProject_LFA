@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import networkx as nx
+from netgraph import Graph
+
 Q = 0 #numarul de stari
 A = [] #alfabetul
 nr = 0 #numarul de muchii/tranzitii
@@ -43,6 +47,92 @@ def citire_NFA(nume):
     
     qi = f.readline().strip()
     F = [x for x in f.readline().split()]
+
+
+def desen_DFA():
+    global D, Q, qi, F
+    #pentru a-mi desena graful nu-mi stochez ideal muchiile
+    D1 = {}
+    for start in D:
+        for lit in D[start]:
+            final = D[start][lit] #nodul in care ajungem plecand din start cu litera lit
+            if start not in D1:
+                D1[start] = {final : [lit]} 
+                #facem toate astea fiindca dintr-un nod pot sa ajung intr-un al doilea cu mai multe cifre
+            elif final not in D1[start]:
+                D1[start][final] = [lit]
+            else:
+                D1[start][final].append(lit)
+    #ne-am creat un nou dictionar de forma:
+    #{nod_start : {nod_final : [literele prin care se ajunge de la nod_start la nod_final]}}
+
+    G = nx.DiGraph()
+    for start in D1:
+        for final in D1[start]:
+            G.add_edge(start, final, label = ', '.join([str(x) for x in D1[start][final]]))
+    edge_labels = nx.get_edge_attributes(G, 'label')
+
+    pos = nx.planar_layout(G)
+
+    #adaugam culori pt a identifica nodurile speciale
+    colors = {}
+    for nod in range(Q):
+        nume_cod = 'q' + str(nod)
+        if nume_cod in F:
+            colors[nume_cod] = '#337bb8'
+        elif nume_cod == qi:
+            colors[nume_cod] = '#9fc5e5'
+        else:
+            colors[nume_cod] = '#63a0d4'
+
+    Graph(G, node_layout = pos, edge_layout = 'curved', origin = (-1, -1), scale = (2, 2),
+        node_color = colors, node_size = 8, node_labels = True, node_label_fontdict = dict(size = 10),
+        edge_labels = edge_labels, edge_label_fontdict = dict(size = 10), edge_label_position = 0.7, arrows = True
+    )
+    plt.show()
+
+
+def desen_NFA():
+    global D 
+    #pentru a-mi desena graful nu-mi stochez ideal muchiile
+    D1 = {}
+    for start in D:
+        for lit in D[start]: #acum trebuie sa iau in considerare faptul ca D[start][lit] e o lista
+            for final in D[start][lit]:
+                if start not in D1:
+                    D1[start] = {final : [lit]} 
+                    #facem toate astea fiindca dintr-un nod pot sa ajung intr-un al doilea cu mai multe cifre
+                elif final not in D1[start]:
+                    D1[start][final] = [lit]
+                else:
+                    D1[start][final].append(lit)
+    #ne-am creat un nou dictionar de forma:
+    #{nod_start : {nod_final : [literele prin care se ajunge de la nod_start la nod_final]}}
+
+    G = nx.DiGraph()
+    for start in D1:
+        for final in D1[start]:
+            G.add_edge(start, final, label = ', '.join([str(x) for x in D1[start][final]]))
+    edge_labels = nx.get_edge_attributes(G, 'label')
+
+    pos = nx.planar_layout(G)
+    
+    #adaugam culori pt a identifica nodurile speciale
+    colors = {}
+    for nod in range(Q):
+        nume_cod = 'q' + str(nod)
+        if nume_cod in F:
+            colors[nume_cod] = '#337bb8'
+        elif nume_cod == qi:
+            colors[nume_cod] = '#9fc5e5'
+        else:
+            colors[nume_cod] = '#63a0d4'
+    
+    Graph(G, node_layout = pos, edge_layout = 'curved', origin = (-1, -1), scale = (2, 2),
+        node_color = colors, node_size = 8, node_labels = True, node_label_fontdict = dict(size = 10),
+        edge_labels = edge_labels, edge_label_fontdict = dict(size = 10), edge_label_position = 0.7, arrows = True
+    )
+    plt.show()
 
 
 def test_DFA(cuv):
@@ -111,8 +201,11 @@ nume = input("Dati numele fisierului ce contine automatul: ")
 
 if cerinta == 1:
     citire_DFA(nume)
+    desen_DFA()
 else:
     citire_NFA(nume)
+    desen_NFA()
+
 
 #trestam apartenenta cuvintelor la limbaj
 k = 1
@@ -137,4 +230,3 @@ while k:
         print("Cuvant respins!")
 
     k = int(input("\nVreti sa mai testati un cuvant? \n[0/1]: "))
-
