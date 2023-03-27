@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from netgraph import Graph
 
+QL = [] #starile
 Q = 0 #numarul de stari
 A = [] #alfabetul
 nr = 0 #numarul de muchii/tranzitii
@@ -10,10 +11,11 @@ qi = 0 #starea intiala
 F = [] #starile finale
 
 def citire_DFA(nume):
-    global Q, A, nr, D, qi, F
+    global Q, QL, A, nr, D, qi, F
     
     f = open(nume)
-    Q = int(f.readline()) 
+    QL = [x for x in f.readline().split()]
+    Q = len(QL)
     A = [x for x in f.readline().split()] 
     nr = int(f.readline())
     
@@ -29,10 +31,11 @@ def citire_DFA(nume):
 
 
 def citire_NFA(nume):
-    global Q, A, nr, D, qi, F
+    global Q, QL, A, nr, D, qi, F
     
     f = open(nume)
-    Q = int(f.readline()) 
+    QL = [x for x in f.readline().split()]
+    Q = len(QL)
     A = [x for x in f.readline().split()] 
     nr = int(f.readline())
     
@@ -50,7 +53,7 @@ def citire_NFA(nume):
 
 
 def desen_DFA():
-    global D, Q, qi, F
+    global D, QL, qi, F
     #pentru a-mi desena graful nu-mi stochez ideal muchiile
     D1 = {}
     for start in D:
@@ -76,14 +79,13 @@ def desen_DFA():
 
     #adaugam culori pt a identifica nodurile speciale
     colors = {}
-    for nod in range(Q):
-        nume_cod = 'q' + str(nod)
-        if nume_cod in F:
-            colors[nume_cod] = '#337bb8'
-        elif nume_cod == qi:
-            colors[nume_cod] = '#9fc5e5'
+    for nod in QL:
+        if nod in F:
+            colors[nod] = '#337bb8'
+        elif nod == qi:
+            colors[nod] = '#9fc5e5'
         else:
-            colors[nume_cod] = '#63a0d4'
+            colors[nod] = '#63a0d4'
 
     Graph(G, node_layout = pos, edge_layout = 'curved', origin = (-1, -1), scale = (2, 2),
         node_color = colors, node_size = 8, node_labels = True, node_label_fontdict = dict(size = 10),
@@ -93,7 +95,7 @@ def desen_DFA():
 
 
 def desen_NFA():
-    global D 
+    global D, QL
     #pentru a-mi desena graful nu-mi stochez ideal muchiile
     D1 = {}
     for start in D:
@@ -119,14 +121,13 @@ def desen_NFA():
     
     #adaugam culori pt a identifica nodurile speciale
     colors = {}
-    for nod in range(Q):
-        nume_cod = 'q' + str(nod)
-        if nume_cod in F:
-            colors[nume_cod] = '#337bb8'
-        elif nume_cod == qi:
-            colors[nume_cod] = '#9fc5e5'
+    for nod in QL:
+        if nod in F:
+            colors[nod] = '#337bb8'
+        elif nod == qi:
+            colors[nod] = '#9fc5e5'
         else:
-            colors[nume_cod] = '#63a0d4'
+            colors[nod] = '#63a0d4'
     
     Graph(G, node_layout = pos, edge_layout = 'curved', origin = (-1, -1), scale = (2, 2),
         node_color = colors, node_size = 8, node_labels = True, node_label_fontdict = dict(size = 10),
@@ -166,16 +167,17 @@ def test_NFA(cuv):
             drumuri_viitoare = []
             for j in range(len(drumuri)):
                 #pt fiecare drum partial pe care il avem luam un vector de viitoare stari prosibile valabile
-                su = D[drumuri[j][len(drumuri[j]) - 1]].get(cuv[i], -1)
-                if su != -1:
-                    #avem in su toate starile in care putem ajunge cu cuv[i] din ultima stare a drumului
-                    #la care suntem
-                    drum_temp = []
-                    for k in range(len(su)):
-                        drum_temp = drumuri[j].copy()
-                        drum_temp.append(su[k])
-                        drumuri_viitoare.append(drum_temp)
-                        #adaugam noile drumuri 
+                if drumuri[j][len(drumuri[j]) - 1] in D:
+                    su = D[drumuri[j][len(drumuri[j]) - 1]].get(cuv[i], -1)
+                    if su != -1:
+                        #avem in su toate starile in care putem ajunge cu cuv[i] din ultima stare a drumului
+                        #la care suntem
+                        drum_temp = []
+                        for k in range(len(su)):
+                            drum_temp = drumuri[j].copy()
+                            drum_temp.append(su[k])
+                            drumuri_viitoare.append(drum_temp)
+                            #adaugam noile drumuri 
             return verificare(drumuri_viitoare, i + 1)
         else:
             return drumuri
